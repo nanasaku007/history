@@ -23,16 +23,19 @@ persons = st.multiselect("人物を選んでください", list(data.keys()), de
 # タイムライン表示
 for mode in ["年齢比較（0歳起点）", "同年比較（西暦起点）"]:
     st.subheader(mode)
-    df = pd.DataFrame()
+    rows = []
 
     for person in persons:
         for event in data[person]:
-            df = df.append({
+            rows.append({
                 "Person": person,
                 "Age": event["age"],
                 "Year": event["year"],
                 "Event": event["event"]
-            }, ignore_index=True)
+            })
+
+df = pd.DataFrame(rows)
+
 
     if mode == "年齢比較（0歳起点）":
         fig = px.scatter(df, x="Age", y="Person", text="Event", color="Person", title="年齢起点で比較")

@@ -1,28 +1,20 @@
-# streamlit_app.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import json
 
-# 年表データ（簡易例）
-data = {
-    "村上春樹": [
-        {"age": 0, "year": 1949, "event": "誕生"},
-        {"age": 29, "year": 1978, "event": "『風の歌を聴け』"},
-        {"age": 39, "year": 1988, "event": "『ノルウェイの森』"}
-    ],
-    "立花隆": [
-        {"age": 0, "year": 1940, "event": "誕生"},
-        {"age": 34, "year": 1974, "event": "『田中角栄研究』"},
-        {"age": 50, "year": 1990, "event": "宇宙論研究開始"}
-    ]
-}
+# JSONデータの読み込み
+with open("data/profiles.json", encoding="utf-8") as f:
+    data = json.load(f)
 
-# UIで人物選択
+# Streamlit UI：人物選択
 persons = st.multiselect("人物を選んでください", list(data.keys()), default=list(data.keys()))
 
-# タイムライン表示
+# 表示モード切替（年齢起点／年起点）
 for mode in ["年齢比較（0歳起点）", "同年比較（西暦起点）"]:
     st.subheader(mode)
+
+    # DataFrame用リスト
     rows = []
 
     for person in persons:
@@ -34,9 +26,9 @@ for mode in ["年齢比較（0歳起点）", "同年比較（西暦起点）"]:
                 "Event": event["event"]
             })
 
-df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
 
-
+    # グラフ表示
     if mode == "年齢比較（0歳起点）":
         fig = px.scatter(df, x="Age", y="Person", text="Event", color="Person", title="年齢起点で比較")
     else:

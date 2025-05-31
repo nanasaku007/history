@@ -1,72 +1,43 @@
-import plotly.express as px
+# streamlit_app.py
+import streamlit as st
 import pandas as pd
+import plotly.express as px
 
-# 人物データ
-people_data = {
-    "村上春樹": {
-        "birth_year": 1949,
-        "events": [
-            {"year": 1979, "description": "『風の歌を聴け』"},
-            {"year": 1987, "description": "『ノルウェイの森』"},
-            {"year": 2006, "description": "カフカ賞受賞"},
-        ]
-    },
-    "宮崎駿": {
-        "birth_year": 1941,
-        "events": [
-            {"year": 1978, "description": "『未来少年コナン』"},
-            {"year": 1988, "description": "『となりのトトロ』"},
-            {"year": 2001, "description": "『千と千尋の神隠し』"},
-        ]
-    },
-    "立花隆": {
-        "birth_year": 1940,
-        "events": [
-            {"year": 1974, "description": "『田中角栄研究』"},
-            {"year": 1985, "description": "『宇宙からの帰還』"},
-            {"year": 1995, "description": "『脳死』討論"},
-        ]
-    }
+# 年表データ（簡易例）
+data = {
+    "村上春樹": [
+        {"age": 0, "year": 1949, "event": "誕生"},
+        {"age": 29, "year": 1978, "event": "『風の歌を聴け』"},
+        {"age": 39, "year": 1988, "event": "『ノルウェイの森』"}
+    ],
+    "立花隆": [
+        {"age": 0, "year": 1940, "event": "誕生"},
+        {"age": 34, "year": 1974, "event": "『田中角栄研究』"},
+        {"age": 50, "year": 1990, "event": "宇宙論研究開始"}
+    ]
 }
 
-# データフレームを構築
-events = []
-for name, info in people_data.items():
-    birth = info["birth_year"]
-    for event in info["events"]:
-        events.append({
-            "name": name,
-            "year": event["year"],
-            "age": event["year"] - birth,
-            "event": event["description"]
-        })
+# UIで人物選択
+persons = st.multiselect("人物を選んでください", list(data.keys()), default=list(data.keys()))
 
-df = pd.DataFrame(events)
+# タイムライン表示
+for mode in ["年齢比較（0歳起点）", "同年比較（西暦起点）"]:
+    st.subheader(mode)
+    df = pd.DataFrame()
 
-# ========= 西暦基準タイムライン =========
-fig_year = px.scatter(
-    df,
-    x="year",
-    y="name",
-    text="event",
-    title="人物ごとの年表（西暦基準）",
-    labels={"year": "年", "name": "人物"},
-    height=500
-)
-fig_year.update_traces(marker=dict(size=12), textposition='top center')
-fig_year.update_layout(xaxis=dict(dtick=5))
-fig_year.show()
+    for person in persons:
+        for event in data[person]:
+            df = df.append({
+                "Person": person,
+                "Age": event["age"],
+                "Year": event["year"],
+                "Event": event["event"]
+            }, ignore_index=True)
 
-# ========= 年齢基準タイムライン =========
-fig_age = px.scatter(
-    df,
-    x="age",
-    y="name",
-    text="event",
-    title="人物ごとの年表（年齢基準）",
-    labels={"age": "年齢", "name": "人物"},
-    height=500
-)
-fig_age.update_traces(marker=dict(size=12), textposition='top center')
-fig_age.update_layout(xaxis=dict(dtick=5))
-fig_age.show()
+    if mode == "年齢比較（0歳起点）":
+        fig = px.scatter(df, x="Age", y="Person", text="Event", color="Person", title="年齢起点で比較")
+    else:
+        fig = px.scatter(df, x="Year", y="Person", text="Event", color="Person", title="同年起点で比較")
+
+    fig.update_traces(marker=dict(size=12), textposition='top center')
+    st.plotly_chart(fig)
